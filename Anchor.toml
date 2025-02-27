@@ -11,8 +11,9 @@ token_devnet = "6Y32aZTKjC7GdDkdpyCwPdMP5vPdnuD2siSAKbh16Vwp"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet" # "Mainnet" or "Devnet" or "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/test_local.ts"
+create_usdc = "yarn run ts-node scripts/createUSDC.ts"
