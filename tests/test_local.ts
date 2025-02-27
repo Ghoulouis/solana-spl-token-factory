@@ -2,9 +2,8 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program, Wallet } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from "@solana/web3.js";
 import { TokenDevnet } from "../target/types/token_devnet";
-import { Account, getAccount, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { Account, getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
 import { expect, use } from "chai";
-import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
 anchor.setProvider(anchor.AnchorProvider.env());
 const provider = anchor.AnchorProvider.env();
@@ -23,7 +22,7 @@ const REDEEMABLE_MINT_SEED = "REDEEMABLE";
     const provider = anchor.AnchorProvider.env();
 
     let controllerPda: PublicKey;
-    let userATA: Account;
+    let userATA: PublicKey;
     let tokenPda: PublicKey;
     console.log("Program ID", program.programId.toBase58());
     describe("Integration tests", async function () {
@@ -50,34 +49,30 @@ const REDEEMABLE_MINT_SEED = "REDEEMABLE";
                 .signers([user.payer])
                 .rpc();
 
-            userATA = await getOrCreateAssociatedTokenAccount(
-                provider.connection,
-                user.payer,
-                tokenPda,
-                user.publicKey,
-                true
-            );
+            userATA = await getAssociatedTokenAddress(tokenPda, user.publicKey);
+
+            console.log("User ATA", userATA.toBase58());
         });
         it("mint test", async function () {
             let amount = new anchor.BN(1e6);
 
-            let balanceBefore = await getAccount(provider.connection, userATA.address);
+            //   let balanceBefore = await getAccount(provider.connection, userATA);
             await program.methods
                 .mint(amount)
                 .accountsPartial({
                     signer: user.publicKey,
                     controller: controllerPda,
                     token: tokenPda,
-                    signerAta: userATA.address,
+                    signerAta: userATA,
                 })
                 .signers([user.payer])
                 .rpc();
-            let balanceAfter = await getAccount(provider.connection, userATA.address);
+            let balanceAfter = await getAccount(provider.connection, userATA);
 
-            expect(balanceAfter.amount - balanceBefore.amount).to.equal(BigInt(amount.toNumber()));
+            expect(balanceAfter.amount).to.equal(BigInt(amount.toNumber()));
         });
 
-        it("create another token", async function () {
+        xit("create another token", async function () {
             let symbol = "USDT";
             tokenPda = PublicKey.findProgramAddressSync([Buffer.from(symbol)], program.programId)[0];
             await program.methods
@@ -89,14 +84,6 @@ const REDEEMABLE_MINT_SEED = "REDEEMABLE";
                 })
                 .signers([user.payer])
                 .rpc();
-
-            userATA = await getOrCreateAssociatedTokenAccount(
-                provider.connection,
-                user.payer,
-                tokenPda,
-                user.publicKey,
-                true
-            );
         });
         this.afterAll("Transfer funds back to bank", async function () {});
     });

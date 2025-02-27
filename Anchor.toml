@@ -11,7 +11,7 @@ token_devnet = "6Y32aZTKjC7GdDkdpyCwPdMP5vPdnuD2siSAKbh16Vwp"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet" # "Mainnet" or "Devnet" or "Localnet"
+cluster = "Localnet" # "Mainnet" or "Devnet" or "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

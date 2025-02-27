@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::{associated_token::*, token::{self, Mint, MintTo, Token, TokenAccount}};
 
 use crate::{state::{controller, Controller}, SOLANA_MAX_MINT_DECIMALS};
 
@@ -17,9 +17,15 @@ pub struct MintToken<'info> {
     #[account(mut)] 
     pub token: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::authority = signer,
+        associated_token::mint = token,
+    )]
     pub signer_ata: Account<'info, TokenAccount>,
 
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
